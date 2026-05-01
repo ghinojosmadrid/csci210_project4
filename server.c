@@ -31,10 +31,9 @@ int main() {
 	while (1) {
 		// TODO:
 		// read requests from serverFIFO
-
-
-
-
+		{
+		read(server, &req, sizeof(req));
+		}
 
 
 		printf("Received a request from %s to send the message %s to %s.\n",req.source,req.msg,req.target);
@@ -42,12 +41,11 @@ int main() {
 		// TODO:
 		// open target FIFO and write the whole message struct to the target FIFO
 		// close target FIFO after writing the message
-
-
-
-
-
-
+		{
+		target = open(req.target, O_WRONLY);
+		write(target, &req, sizeof(req));
+		close(target);
+		}
 
 	}
 	close(server);

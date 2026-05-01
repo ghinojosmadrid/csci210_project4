@@ -31,12 +31,14 @@ void sendmsg (char *user, char *target, char *msg) {
 	// Send a request to the server to send the message (msg) to the target user (target)
 	// by creating the message structure and writing it to server's FIFO
 
+	struct message req;
+	strcpy(req.source, user);
+	strcpy(req.target, target);
+	strcpy(req.msg, msg);
 
-
-
-
-
-
+	int serverF = open("serverFIFO", O_WRONLY);
+	write(serverF,&req,sizeof(struct message));
+	close(serverF);
 
 }
 
@@ -49,10 +51,18 @@ void* messageListener(void *arg) {
 	// Incoming message from [source]: [message]
 	// put an end of line at the end of the message
 
+	struct message msg;
+	int fifoF = open(uName, O_RDONLY);;
 
-
-
-
+	while (1) {
+		int bytesRead = read(fifoF, &msg, sizeof(struct message));
+		if(bytesRead == sizeof(struct message)) {
+			printf("Incoming message from %s: %s\n", msg.source, msg.msg);
+			fflush(stdout);
+		}
+	}
+	
+	close(fifoF);
 
 	pthread_exit((void*)0);
 }
@@ -86,8 +96,8 @@ int main(int argc, char **argv) {
     // TODO:
     // create the message listener thread
 
-
-
+	pthread_t listener;
+	pthread_create(&listener, NULL, messageListener, NULL);
 
 
     while (1) {
@@ -124,15 +134,18 @@ int main(int argc, char **argv) {
 		// if no message is specified, you should print the followingA
  		// printf("sendmsg: you have to enter a message\n");
 
+		char * target = strtok(NULL, " ");
+		char * msg = strtok(NULL, "\0");
 
-
-
-
-
-
-
-
-
+		if (target == NULL) {
+			printf("sendmsg: you have to specify target user\n");
+		}
+		else if(msg == NULL) {
+			printf("sendmsg: you have to enter a message\n");
+		}
+		else{
+			sendmsg(uName, target, msg);
+		}
 		continue;
 	}
 
